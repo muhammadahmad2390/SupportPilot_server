@@ -1,0 +1,31 @@
+{
+  "name": "supportpilot_server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon --exec node src/index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/muhammadahmad2390/SupportPilot_server.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/muhammadahmad2390/SupportPilot_server/issues"
+  },
+  "homepage": "https://github.com/muhammadahmad2390/SupportPilot_server#readme",
+  "dependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@tsconfig/node24": "^24.0.5",
+    "@types/express": "^5.0.6",
+    "nodemon": "^3.1.14",
+    "typescript": "^7.0.2"
+  }
+}
