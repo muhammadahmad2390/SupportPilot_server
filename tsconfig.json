@@ -1,7 +1,17 @@
 {
-  "extends": "@tsconfig/node24/tsconfig.json",
   "compilerOptions": {
+    "target": "ES2020",
+    "module": "nodenext",
+    "moduleResolution": "nodeNext",
     "rootDir": "src",
-    "outDir": "dist"
-  }
+    "outDir": "dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true
+  },
+  "include": ["src"],
+  "exclude": ["node_modules"]
 }
