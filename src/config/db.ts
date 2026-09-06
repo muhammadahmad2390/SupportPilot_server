@@ -4,7 +4,7 @@ const connect_db = async () => {
   const mongodb_uri = process.env.MONGODB_URI;
   if (mongodb_uri) {
     try {
-      await mongoose.connect(mongodb_uri);
+      await mongoose.connect(`${mongodb_uri}/supportpilot`);
       console.log("Connected to mongo db");
     } catch (err) {
       console.log(err);
