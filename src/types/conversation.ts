@@ -11,6 +11,19 @@ export type convo = {
   escalated?: { type: boolean; default: true };
 };
 
+export type ConversationResponse = {
+  conversation_id: string;
+  customer_id: string;
+  messages: {
+    role: "assistant" | "user";
+    content: string;
+    timestamp: Date;
+  }[];
+  escalated: boolean;
+  created_at: Date;
+  update_at: Date;
+};
+
 export type agentResponse = {
   reply: string;
   escalated: boolean;

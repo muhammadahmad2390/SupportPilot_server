@@ -1,8 +1,6 @@
 import axios from "axios";
 import type { agentParams, agentResponse } from "../types/conversation.ts";
-
 process.loadEnvFile();
-
 const agentUrl = process.env.AGENT_URL;
 
 const callAgent = async (

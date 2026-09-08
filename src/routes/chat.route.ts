@@ -4,6 +4,6 @@ import chat from "../controllers/chat.controller.ts";
 
 const router: Router = express.Router();
 
-router.get("/chat", chat);
+router.post("/chat", chat);
 
 export default router;

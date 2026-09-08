@@ -22,7 +22,7 @@ const conversationSchema: mongoose.Schema = new mongoose.Schema({
 
 export const validateConversation = (body: convo) => {
   const schema = joi.object({
-    conversation_id: joi.string(),
+    conversation_id: joi.string().optional().allow(null, ""),
     customer_id: joi.string().required(),
     message: joi
       .object({

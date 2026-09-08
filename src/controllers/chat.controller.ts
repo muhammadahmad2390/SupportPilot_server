@@ -59,7 +59,6 @@ const chat = async (
       customer_id: req.body.customer_id,
       message: req.body.message.content,
     });
-    console.log(agentResponse);
 
     if (!agentResponse)
       return res.status(500).json({ message: "Failed to call the agent" });
