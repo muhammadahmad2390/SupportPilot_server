@@ -1,0 +1,28 @@
+export type policy = {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  category:
+    | "returns"
+    | "shipping"
+    | "warranty"
+    | "faq"
+    | "technical"
+    | "internal";
+  updatedBy: string;
+};
+
+export type policyRespones = {
+  title: string;
+  slug: string;
+  content: string;
+  category:
+    | "returns"
+    | "shipping"
+    | "warranty"
+    | "faq"
+    | "technical"
+    | "internal";
+  updatedBy: string;
+};

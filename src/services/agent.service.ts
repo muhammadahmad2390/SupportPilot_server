@@ -13,6 +13,7 @@ const callAgent = async (
         customer_id: chat.customer_id,
         message: chat.message,
       });
+      console.log(response);
       return response.data;
     } catch (err) {
       console.log(err);

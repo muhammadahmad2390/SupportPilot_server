@@ -4,6 +4,7 @@ import connect_db from "./config/db.ts";
 import chat from "./routes/chat.route.ts";
 import cors from "cors";
 import conversations from "./routes/conversation.route.ts";
+import policy from "./routes/policy.route.ts";
 
 //load .env file into envionment
 process.loadEnvFile();
@@ -12,7 +13,7 @@ connect_db();
 const app: Express = express();
 app.use(
   cors({
-    origin: "http://localhost:5174",
+    origin: "http://localhost:5173",
     methods: ["GET", "POST"],
   }),
 );
@@ -20,6 +21,7 @@ app.use(express.json());
 
 app.use("/api", chat);
 app.use("/api/conversations", conversations);
+app.use("/api/policy", policy);
 app.use(
   (req: Request, res: Response<{ message: String }>, next: NextFunction) => {
     res.status(404).json({ message: "No such route exist." });
