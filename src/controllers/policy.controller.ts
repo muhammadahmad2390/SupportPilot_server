@@ -1,20 +1,33 @@
 import type { Request, Response } from "express";
-import type { policy, policyRespones } from "../types/policy.ts";
+import type { policy, policyResponse } from "../types/policy.ts";
 import {
   Policy,
   validatePolicy,
   validatePolicyUpdate,
 } from "../models/policy.model.ts";
+import { updateVectorEmbeddings } from "../services/agent.service.ts";
+import _ from "underscore";
 
 export const createPolicy = async (
   req: Request<{}, {}, policy>,
-  res: Response<policyRespones | string>,
+  res: Response<policyResponse | string>,
 ) => {
   const { error } = validatePolicy(req.body);
   if (error) return res.status(400).send(error.message);
 
   try {
     const newPolicy = await Policy.create(req.body);
+
+    try {
+      await updateVectorEmbeddings(
+        newPolicy.slug,
+        newPolicy.title,
+        newPolicy.content,
+      );
+    } catch (err) {
+      await Policy.findByIdAndDelete(newPolicy._id);
+      return res.status(500).send("Failed to create policy");
+    }
     res.status(201).json(newPolicy);
   } catch (err) {
     if (err instanceof Error && err.message.includes("duplicate key")) {
@@ -26,21 +39,34 @@ export const createPolicy = async (
 
 export const updatePolicy = async (
   req: Request<{ id: string }, {}, policy>,
-  res: Response<policyRespones | string>,
+  res: Response<policyResponse | string>,
 ) => {
   if (!req.params.id.match(/^[0-9a-fA-F]{24}$/))
     return res.status(400).send("Invalid id");
 
   const { error } = validatePolicyUpdate(req.body);
   if (error) return res.status(400).send(error.message);
-
+  let result;
   try {
-    const updated = await Policy.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
-    if (!updated) return res.status(404).send("Policy not found");
+    result = await Policy.findByIdAndUpdate(req.params.id, req.body);
+    if (!result) return res.status(404).send("Policy not found");
+    const updated = _.pick(req.body, [
+      "title",
+      "slug",
+      "content",
+      "category",
+      "updatedBy",
+    ]);
     res.status(200).json(updated);
   } catch (err) {
+    const oldPolicy = _.pick(result, [
+      "title",
+      "slug",
+      "content",
+      "category",
+      "updatedBy",
+    ]);
+    await Policy.findByIdAndUpdate(req.params.id, oldPolicy ? oldPolicy : {});
     if (err instanceof Error && err.message.includes("duplicate key")) {
       return res.status(409).send("A policy with this slug already exists");
     }
@@ -67,7 +93,7 @@ export const deletePolicy = async (
 // get all
 export const getPolicies = async (
   req: Request,
-  res: Response<policyRespones[] | string>,
+  res: Response<policyResponse[] | string>,
 ) => {
   try {
     const policies = await Policy.find();
@@ -80,7 +106,7 @@ export const getPolicies = async (
 // get one
 export const getPolicy = async (
   req: Request<{ id: string }>,
-  res: Response<policyRespones | string>,
+  res: Response<policyResponse | string>,
 ) => {
   if (!req.params.id.match(/^[0-9a-fA-F]{24}$/))
     return res.status(400).send("Invalid id");

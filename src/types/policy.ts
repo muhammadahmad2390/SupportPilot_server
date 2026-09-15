@@ -13,7 +13,7 @@ export type policy = {
   updatedBy: string;
 };
 
-export type policyRespones = {
+export type policyResponse = {
   title: string;
   slug: string;
   content: string;

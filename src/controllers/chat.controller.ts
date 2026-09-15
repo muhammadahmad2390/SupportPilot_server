@@ -3,7 +3,7 @@ import {
   Conversation,
   validateConversation,
 } from "../models/conversation.model.ts";
-import callAgent from "../services/agent.service.ts";
+import { callAgent } from "../services/agent.service.ts";
 import type { convo } from "../types/conversation.ts";
 import { v4 as uuid } from "uuid";
 

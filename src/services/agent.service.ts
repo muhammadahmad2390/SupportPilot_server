@@ -1,9 +1,11 @@
 import axios from "axios";
 import type { agentParams, agentResponse } from "../types/conversation.ts";
+import type { policyRespones } from "../types/policy.ts";
+import type { AxiosResponse } from "axios";
 process.loadEnvFile();
 const agentUrl = process.env.AGENT_URL;
 
-const callAgent = async (
+export const callAgent = async (
   chat: agentParams,
 ): Promise<agentResponse | undefined> => {
   if (agentUrl) {
@@ -25,4 +27,27 @@ const callAgent = async (
   }
 };
 
-export default callAgent;
+export const updateVectorEmbeddings = async (
+  policy_id: string,
+  title: string,
+  content: string,
+): Promise<AxiosResponse<{ message: string }> | undefined> => {
+  if (!agentUrl) {
+    console.log("No agent URL provided");
+    return undefined;
+  } else {
+    try {
+      const response: AxiosResponse<{ message: string }> = await axios.post(
+        `${agentUrl}/update_policy`,
+        {
+          policy_id: policy_id,
+          title: title,
+          content: content,
+        },
+      );
+      return response;
+    } catch (err) {
+      throw err instanceof Error ? err : new Error(String(err));
+    }
+  }
+};
