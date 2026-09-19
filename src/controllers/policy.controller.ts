@@ -5,8 +5,12 @@ import {
   validatePolicy,
   validatePolicyUpdate,
 } from "../models/policy.model.ts";
-import { updateVectorEmbeddings } from "../services/agent.service.ts";
+import {
+  deleteVectorEmbeddings,
+  updateVectorEmbeddings,
+} from "../services/agent.service.ts";
 import _ from "underscore";
+import slugify from "slugify";
 
 export const createPolicy = async (
   req: Request<{}, {}, policy>,
@@ -15,8 +19,14 @@ export const createPolicy = async (
   const { error } = validatePolicy(req.body);
   if (error) return res.status(400).send(error.message);
 
+  const slug = slugify(req.body.title, { lower: true, strict: true });
+  if (!slug)
+    return res
+      .status(400)
+      .send("Title must contain at least one letter or number");
+
   try {
-    const newPolicy = await Policy.create(req.body);
+    const newPolicy = await Policy.create({ ...req.body, slug });
 
     try {
       await updateVectorEmbeddings(
@@ -26,68 +36,106 @@ export const createPolicy = async (
       );
     } catch (err) {
       await Policy.findByIdAndDelete(newPolicy._id);
-      return res.status(500).send("Failed to create policy");
+      console.error("Policy sync failed, rolled back:", err);
+      return res.status(502).send("Failed to sync policy to search index");
     }
     res.status(201).json(newPolicy);
   } catch (err) {
     if (err instanceof Error && err.message.includes("duplicate key")) {
-      return res.status(409).send("A policy with this slug already exists");
+      return res.status(409).send("Title too similar to an existing policy");
     }
     return res.status(500).send("Failed to create policy");
   }
 };
 
 export const updatePolicy = async (
-  req: Request<{ id: string }, {}, policy>,
+  req: Request<{ slug: string }, {}, policy>,
   res: Response<policyResponse | string>,
 ) => {
-  if (!req.params.id.match(/^[0-9a-fA-F]{24}$/))
-    return res.status(400).send("Invalid id");
+  if (!req.params.slug) return res.status(400).send("No slug provided.");
 
   const { error } = validatePolicyUpdate(req.body);
   if (error) return res.status(400).send(error.message);
+
   let result;
   try {
-    result = await Policy.findByIdAndUpdate(req.params.id, req.body);
+    result = await Policy.findOneAndUpdate(
+      { slug: req.params.slug },
+      {
+        ...req.body,
+        updatedAt: new Date(),
+      },
+    );
+
     if (!result) return res.status(404).send("Policy not found");
-    const updated = _.pick(req.body, [
-      "title",
-      "slug",
-      "content",
-      "category",
-      "updatedBy",
-    ]);
-    res.status(200).json(updated);
   } catch (err) {
-    const oldPolicy = _.pick(result, [
-      "title",
-      "slug",
-      "content",
-      "category",
-      "updatedBy",
-    ]);
-    await Policy.findByIdAndUpdate(req.params.id, oldPolicy ? oldPolicy : {});
     if (err instanceof Error && err.message.includes("duplicate key")) {
       return res.status(409).send("A policy with this slug already exists");
     }
     return res.status(500).send("Failed to update policy");
   }
+  // -------------------vector store updation----------------------------
+  try {
+    await updateVectorEmbeddings(
+      req.params.slug,
+      req.body.title,
+      req.body.content,
+    );
+  } catch (syncErr) {
+    const oldPolicy = _.pick(result, [
+      "title",
+      "content",
+      "category",
+      "updatedBy",
+    ]);
+    await Policy.findOneAndUpdate({ slug: req.params.slug }, oldPolicy);
+    console.error("Policy sync failed, rolled back:", syncErr);
+    return res.status(502).send("Failed to sync policy to search index");
+  }
+  const updated = _.pick(req.body, [
+    "title",
+    "content",
+    "category",
+    "updatedBy",
+  ]);
+  res.status(200).json({ ...updated, slug: req.params.slug });
 };
-
 export const deletePolicy = async (
-  req: Request<{ id: string }>,
+  req: Request<{ slug: string }>,
   res: Response<string>,
 ) => {
-  if (!req.params.id.match(/^[0-9a-fA-F]{24}$/))
-    return res.status(400).send("Invalid id");
+  if (!req.params.slug) return res.status(400).send("No slug provided");
+
+  let policy;
+  try {
+    policy = await Policy.findOne({ slug: req.params.slug });
+    if (!policy) return res.status(404).send("Policy not found");
+  } catch (err) {
+    return res.status(500).send("Failed to fetch policy");
+  }
 
   try {
-    const deleted = await Policy.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).send("Policy not found");
-    res.status(200).send("Policy deleted");
+    await deleteVectorEmbeddings(req.params.slug);
   } catch (err) {
+    console.error("Vector delete failed:", err);
+    return res.status(502).send("Failed to delete policy from search index");
+  }
+
+  try {
+    await Policy.findOneAndDelete({ slug: req.params.slug });
+  } catch (err) {
+    // vectors are already gone — resync from the doc we fetched, to avoid
+    // leaving an un-searchable policy still sitting in Mongo
+    await updateVectorEmbeddings(
+      policy.slug,
+      policy.title,
+      policy.content,
+    ).catch(() => {});
+    console.error("Mongo delete failed after vector delete:", err);
     return res.status(500).send("Failed to delete policy");
   }
+
+  res.status(200).send("Policy deleted");
 };
 
 // get all
@@ -105,14 +153,13 @@ export const getPolicies = async (
 
 // get one
 export const getPolicy = async (
-  req: Request<{ id: string }>,
+  req: Request<{ slug: string }>,
   res: Response<policyResponse | string>,
 ) => {
-  if (!req.params.id.match(/^[0-9a-fA-F]{24}$/))
-    return res.status(400).send("Invalid id");
+  if (!req.params.slug) return res.status(400).send("Slug not provided");
 
   try {
-    const policy = await Policy.findById(req.params.id);
+    const policy = await Policy.findOne({ slug: req.params.slug });
     if (!policy) return res.status(404).send("Policy not found");
     res.status(200).json(policy);
   } catch (err) {

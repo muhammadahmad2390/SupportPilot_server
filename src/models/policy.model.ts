@@ -9,7 +9,6 @@ const objectId = joi
 
 const base = {
   title: joi.string().required(),
-  slug: joi.string().required(),
   content: joi.string().required(),
   category: joi
     .string()

@@ -10,9 +10,9 @@ import {
 const router = Router();
 
 router.get("/", getPolicies);
-router.get("/:id", getPolicy);
+router.get("/:slug", getPolicy);
 router.post("/", createPolicy);
-router.put("/:id", updatePolicy);
-router.delete("/:id", deletePolicy);
+router.put("/:slug", updatePolicy);
+router.delete("/:slug", deletePolicy);
 
 export default router;
