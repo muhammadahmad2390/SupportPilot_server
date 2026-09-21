@@ -13,6 +13,7 @@ export type ticket = {
   conversation_id: String;
   customer_id: String;
   issue: String;
+  aiSummary: String;
   status: "open" | "resolved" | "escalated";
   created_at: Date;
 };

@@ -6,6 +6,7 @@ const ticketSchema = new mongoose.Schema({
   conversation_id: { type: String, required: true },
   customer_id: { type: String, required: true },
   issue: { type: String, required: true },
+  aiSummary: { type: String, required: true },
   status: {
     type: String,
     enum: ["open", "resolved", "escalated"],
