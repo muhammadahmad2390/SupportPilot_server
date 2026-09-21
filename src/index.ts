@@ -6,6 +6,8 @@ import cors from "cors";
 import conversations from "./routes/conversation.route.ts";
 import policy from "./routes/policy.route.ts";
 import ticketRoutes from "./routes/ticket.route.ts";
+import customerRoutes from "./routes/customer.route.ts";
+import orderRoutes from "./routes/order.route.ts";
 
 //load .env file into envionment
 process.loadEnvFile();
@@ -24,6 +26,8 @@ app.use("/api", chat);
 app.use("/api/conversations", conversations);
 app.use("/api/policy", policy);
 app.use("/admin/tickets", ticketRoutes);
+app.use("/customers", customerRoutes);
+app.use("/orders", orderRoutes);
 app.use(
   (req: Request, res: Response<{ message: String }>, next: NextFunction) => {
     res.status(404).json({ message: "No such route exist." });
