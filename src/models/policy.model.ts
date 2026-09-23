@@ -14,14 +14,13 @@ const base = {
     .string()
     .valid("returns", "shipping", "warranty", "faq", "technical", "internal")
     .required(),
-  updatedBy: joi.string().required(),
 };
 
 export const validatePolicy = (policy: policy) =>
   joi.object(base).validate(policy);
 
 export const validatePolicyUpdate = (policy: policy) =>
-  joi.object({ id: objectId.required(), ...base }).validate(policy);
+  joi.object({ ...base }).validate(policy);
 
 const policySchema = new mongoose.Schema({
   title: { type: String, required: true },

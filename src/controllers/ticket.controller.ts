@@ -37,7 +37,7 @@ export const getTicekt = async (
     const ticket = await Ticket.findById(req.params.id);
     if (!ticket)
       return res.status(404).json({ message: "No ticket with this id found" });
-
+    console.log(ticket);
     return res.status(200).json(ticket);
   } catch (err) {
     return res.status(500).json({ message: "something went wrong" });

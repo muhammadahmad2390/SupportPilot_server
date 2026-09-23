@@ -17,7 +17,7 @@ const app: Express = express();
 app.use(
   cors({
     origin: "http://localhost:5173",
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
   }),
 );
 app.use(express.json());

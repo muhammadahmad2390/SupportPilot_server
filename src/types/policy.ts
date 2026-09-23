@@ -1,5 +1,4 @@
 export type policy = {
-  id: string;
   title: string;
   content: string;
   category:
@@ -9,7 +8,6 @@ export type policy = {
     | "faq"
     | "technical"
     | "internal";
-  updatedBy: string;
 };
 
 export type policyResponse = {

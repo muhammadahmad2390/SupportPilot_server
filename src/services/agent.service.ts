@@ -22,7 +22,7 @@ export const callAgent = async (chat: agentParams): Promise<agentResponse> => {
   }
 };
 
-export const updateVectorEmbeddings = async (
+export const createVectorEmbeddings = async (
   policy_id: string,
   title: string,
   content: string,
@@ -32,9 +32,32 @@ export const updateVectorEmbeddings = async (
   } else {
     try {
       const response: AxiosResponse<{ message: string }> = await axios.post(
-        `${agentUrl}/update_policy`,
+        `${agentUrl}/create_policy`,
         {
           policy_id: policy_id,
+          title: title,
+          content: content,
+        },
+      );
+      return response;
+    } catch (err) {
+      throw err instanceof Error ? err : new Error(String(err));
+    }
+  }
+};
+
+export const updateVectorEmbeddings = async (
+  policy_id: string,
+  title: string,
+  content: string,
+): Promise<AxiosResponse<{ message: string }>> => {
+  if (!agentUrl) {
+    throw new Error("AGENT_URL is not configured");
+  } else {
+    try {
+      const response: AxiosResponse<{ message: string }> = await axios.put(
+        `${agentUrl}/${policy_id}`,
+        {
           title: title,
           content: content,
         },
@@ -54,7 +77,7 @@ export const deleteVectorEmbeddings = async (
   } else {
     try {
       const response: AxiosResponse<{ message: string }> = await axios.delete(
-        `${agentUrl}/delete_policy/${policy_id}`,
+        `${agentUrl}/${policy_id}`,
       );
       return response;
     } catch (err) {

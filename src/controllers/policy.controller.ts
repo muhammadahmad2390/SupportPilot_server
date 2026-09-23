@@ -6,6 +6,7 @@ import {
   validatePolicyUpdate,
 } from "../models/policy.model.ts";
 import {
+  createVectorEmbeddings,
   deleteVectorEmbeddings,
   updateVectorEmbeddings,
 } from "../services/agent.service.ts";
@@ -17,6 +18,7 @@ export const createPolicy = async (
   res: Response<policyResponse | string>,
 ) => {
   const { error } = validatePolicy(req.body);
+  console.log(error?.message);
   if (error) return res.status(400).send(error.message);
 
   const slug = slugify(req.body.title, { lower: true, strict: true });
@@ -26,10 +28,14 @@ export const createPolicy = async (
       .send("Title must contain at least one letter or number");
 
   try {
-    const newPolicy = await Policy.create({ ...req.body, slug });
+    const newPolicy = await Policy.create({
+      ...req.body,
+      slug,
+      updatedBy: "admin",
+    });
 
     try {
-      await updateVectorEmbeddings(
+      await createVectorEmbeddings(
         newPolicy.slug,
         newPolicy.title,
         newPolicy.content,
@@ -98,7 +104,9 @@ export const updatePolicy = async (
     "category",
     "updatedBy",
   ]);
-  res.status(200).json({ ...updated, slug: req.params.slug });
+  res
+    .status(200)
+    .json({ ...updated, slug: req.params.slug, updatedBy: "admin" });
 };
 export const deletePolicy = async (
   req: Request<{ slug: string }>,
